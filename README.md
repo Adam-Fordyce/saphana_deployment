@@ -13,7 +13,7 @@ site.yml
 - You will first need to run setup_azure_credentials.yml to set up the authentication with Azure for Azure Resource Manager modules. 
 - provision_azure_vms.yml takes care of Azure VM provisioning. The difference from the previous blog is that the role azure_rm_availabilityset is added to create Azure Availability sets which provide VM redundancy and availability. 
 - Once Azure VMs are provisioned, playbook site.yml will trigger configure_azure_vms.yml to configure the VMs and the bootstrap server in the OS level. 
-- As the last piece, deploy_sap_hana_hsr.yml is used to prepare SAP HANA nodes, install SAP HANA, configure SAP HANA System Replication, and set up pacemaker. 
+- As the last piece, deploy_sap_hana_hsr.yml is used to prepare SAP HANA nodes, install SAP HANA, configure SAP HANA System Replication, and set up High Availability, i.e. Red Hat pacemaker. 
 
 
 ## Now, let's check out the file structure
