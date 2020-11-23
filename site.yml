@@ -1,0 +1,6 @@
+---
+- import_playbook: setup_azure_credentials.yml
+- import_playbook: provision_azure_vms.yml
+- import_playbook: configure_azure_vms.yml
+- import_playbook: deploy_sap_hana_hsr.yml
+...

@@ -1,0 +1,91 @@
+---
+# sap_rhsm role variables
+sap_rhsm_username: 'XXXXXXX'
+sap_rhsm_password: 'XXXXXXX'
+sap_rhsm_pool_ids: 
+            - "XXXXXXXXXXXXXXXXXXXXXXX"
+
+# Deploy SAP HANA vars
+sap_hana_deployment_root_password: "MyPassw0rd!"
+sap_hana_deployment_sapadm_password: "MyPassw0rd!"
+sap_hana_deployment_hana_sid: RHT
+sap_hana_deployment_hana_instance_number: "01"
+sap_hana_deployment_hana_env_type: development
+sap_hana_deployment_hana_mem_restrict: 'n'
+sap_hana_deployment_hana_db_system_password: "MyPassw0rd!"
+sap_hana_deployment_ase_user_password: "MyPassw0rd!"
+#sap_hana_deployment_hana_groupid: 30200
+#sap_hana_deployment_hana_userid: 30200
+sap_hana_deployment_apply_license: false
+
+# Seems sapadm password won't be taken, so use a common master password instead
+# Update it if sapadm password is working again 
+sap_hana_deployment_common_master_password: "MyPassw0rd!"
+sap_hana_deployment_use_master_password: y
+
+# Variables required for 'sap_hana_hsr' role
+sap_hana_hsr_hana_sid: RHT
+sap_hana_hsr_hana_instance_number: "01"
+sap_hana_hsr_hana_db_system_password: "MyPassw0rd!"
+sap_hana_hsr_hana_primary_hostname: saphana01
+
+# linux-system-roles.storage role variables
+storage_pools:
+        - name: vgsaphana
+          disks:
+            - sdc
+          volumes:
+            - name: hana_shared
+              size: "24 GiB"
+              mount_point: "/hana/shared"
+              fs_type: xfs
+              state: present
+            - name: hana_data
+              size: "24 GiB"
+              mount_point: "/hana/data"
+              fs_type: xfs
+              state: present
+            - name: hana_logs
+              size: "12 GiB"
+              mount_point: "/hana/logs"
+              fs_type: xfs
+              state: present
+            - name: usr_sap
+              size: "49 GiB"
+              mount_point: "/usr/sap"
+              fs_type: xfs
+              state: present 
+
+# rhel-system-roles.timesync variables
+ntp_servers:
+                  - hostname: 0.rhel.pool.ntp.org
+                    iburst: yes
+                  - hostname: 1.rhel.pool.ntp.org
+                    iburst: yes
+                  - hostname: 2.rhel.pool.ntp.org
+                    iburst: yes
+                  - hostname: 3.rhel.pool.ntp.org
+                    iburst: yes
+
+
+# SAP Preconfigured role
+# SAP-Media Check (get unpacked HANA from Mountpoint)
+sap_hana_mediacheck_serverpath: "hananfsstorageaccount.file.core.windows.net:/hananfsstorageaccount/nfshana"
+sap_hana_mediacheck_mountpoint: /SAP_HANA_BINARY
+sap_hana_installdir: "{{ sap_hana_mediacheck_mountpoint + '/DATA_UNITS/HDB_SERVER_LINUX_' + ansible_architecture|upper }}"
+
+# SAP Host Agent
+sap_hostagent_installation_type: "bundle"
+sap_hostagent_bundle_path: "{{ sap_hana_installdir + '/server'}}"
+sap_hostagent_clean_tmp_directory: true
+
+# Variables required for 'sap_hana_ha_pacemaker' role
+sap_hana_ha_pacemaker_hana_sid: RHT
+sap_hana_ha_pacemaker_hana_instance_number: "01"
+sap_hana_ha_pacemaker_vip: 10.0.1.100
+sap_hana_ha_pacemaker_hacluster_password: "MyPassw0rd!"
+sap_hana_ha_pacemaker_node1_fqdn: saphana01.tamlab.com
+sap_hana_ha_pacemaker_node2_fqdn: saphana02.tamlab.com
+sap_hana_ha_pacemaker_node1_ip: 10.0.1.6
+sap_hana_ha_pacemaker_node2_ip: 10.0.1.7
+...

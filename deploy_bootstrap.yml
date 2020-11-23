@@ -1,0 +1,98 @@
+---
+- hosts: localhost
+  connection: local
+
+  vars:
+    resource_group: ResourceGroupHana
+    storage_account: storageaccounthana
+    storage_container: images
+    vm_image: bootstrapImage
+    image_name: bootstrap.vhd
+    virtual_network: ResourceGroupHanaVnet
+    virtual_subnet: ResourceGroupHanaSubnet
+    virtual_machine: bootstrap
+    public_ip: bootstrapPublicIP
+    nic: bootstrapVMNic
+    security_group: bootstrapSecgroup
+    image_URI: "https://{{ storage_account }}.blob.core.windows.net/{{ storage_container }}/{{ image_name }}"
+
+  tasks:
+    - name: Create a resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        location: eastus
+
+    - name: Create an Azure Image from the image uploaded
+      azure_rm_image:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vm_image }}"
+        source: "{{ image_URI }}"
+        os_type: Linux
+
+    - name: Create a virtual network
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}"
+        name: "{{ virtual_network }}"
+        address_prefixes: "10.0.0.0/16"
+
+    - name: Create a subnet
+      azure_rm_subnet:
+        resource_group: "{{ resource_group }}"
+        name: "{{ virtual_subnet }}"
+        address_prefix: "10.0.1.0/24"
+        virtual_network: "{{ virtual_network }}"
+
+    - name: Create a public ip
+      azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}"
+        allocation_method: Static
+        name: "{{ public_ip }}"
+
+    - name: Create a security group that allows HTTP
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}"
+        name: "{{ security_group }}"
+        rules:
+          - name: 'AllowSSH'
+            protocol: Tcp
+            destination_port_range: 22
+            access: Allow
+            priority: 101
+            direction: Inbound
+
+    - name: Create a network interface
+      azure_rm_networkinterface:
+        resource_group: "{{ resource_group }}"
+        name: "{{ nic }}"
+        virtual_network: "{{ virtual_network }}"
+        subnet: "{{ virtual_subnet }}"
+        security_group: "{{ security_group }}"
+        ip_configurations:
+          - name: ipconfig1
+            public_ip_address_name: "{{ public_ip }}"
+            primary: True
+
+    - name: Create a bootstrap server
+      azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}"
+        name: "{{ virtual_machine }}"
+        vm_size: Standard_DS1_v2
+        admin_username: adminUser
+        admin_password: "adminUser#1"
+        ssh_public_keys:
+          - path: /home/adminUser/.ssh/authorized_keys
+            key_data: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCv0OWe1F+vgMj2PY8KrRn9TGatHqUFFyZII5vIFrckkWa9VfNuTyM37WiigmD9rUwxX79erwMz5x+HH/oyJ7Yn+8e8Xm9opvA0Y2I2rtqkwXqrI9Nd9ntE1M5mg/Cm9+puly5dOOccyv5EW+j+b+2T1dI0vuFh26h8Ds2oqujO0RDMk8F2xNA3WCuqDGi0ULYhvX0LevWDB7EebrGJZIM1RYD44NBEGmAo8o2YMKLTEouxx9HXMyK14K5pD5ztRj81psbxZ8xYn1s4tjKtjQEoHpJnrN7bhhoEO5UGdHWaNtMESPaSqvyMSTtlW3owh75oSOvk4XH7Xj1jqEOASekTgwo3ILk3c6jvpBFaGBhZlLBtDtR3N/AY6SsQXTnhUVNJCQWlbCpBtPpnqN5Bwgo0pC6EIZtVqpEesXToLf5QG6WskGycmr8IasCi2O/RRlI49H30No1OTIiABkG2Urha9Ff3N1psaNvPUBqvyLIYaApGa8t9j6OYxo6DFK9ys58= root@dell-r640-12.tamlab.pnq2.redhat.com
+        network_interfaces: "{{ nic }}"
+        image:
+          name: "{{ vm_image }}"
+          resource_group: "{{ resource_group }}"
+        managed_disk_type: Standard_LRS
+        data_disks:
+          - lun: 0
+            disk_size_gb: 40
+            managed_disk_type: Standard_LRS
+      register: result
+
+    - name: Show the information of the VM
+      debug: 
+        var=result

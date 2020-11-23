@@ -1,0 +1,53 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+  - name: Get facts for saphana01's network interface
+    azure_rm_networkinterface_facts:
+      resource_group: ResourceGroupHana
+      name: NicHana01
+    register: result
+  - set_fact: 
+      saphana01_ipaddr: "{{ result.networkinterfaces.0.ip_configurations.0.private_ip_address }}"
+
+  - name: Get facts for saphana02's network interface
+    azure_rm_networkinterface_facts:
+      resource_group: ResourceGroupHana
+      name: NicHana02
+    register: result
+  - set_fact: 
+      saphana02_ipaddr: "{{ result.networkinterfaces.0.ip_configurations.0.private_ip_address }}"
+
+  - name: Setup /etc/hosts
+    blockinfile: 
+      path: /etc/hosts
+      block: |
+        {{ saphana01_ipaddr }} saphana01 saphana01.tamlab.com
+        {{ saphana02_ipaddr }} saphana02 saphana02.tamlab.com
+
+- hosts: hana
+  tasks:
+  - name: Ensure that copy local /etc/hosts to saphana01 and saphana02
+    copy:
+      src: /etc/hosts
+      dest: /etc/hosts
+      owner: root
+      group: root
+      mode: '0644'
+      backup: yes
+
+  - name: Disable RHUI repos by renaming repo file /etc/yum.repos.d/rh-cloud.repo
+    command: mv /etc/yum.repos.d/rh-cloud.repo /etc/yum.repos.d/rh-cloud.repo.bk
+    ignore_errors: yes
+
+  - name: Extend root filesystem "/" of VMs to 10GB, the default to 2GB
+    lvol:
+      vg: rootvg
+      lv: rootlv
+      size: 10240
+      resizefs: yes
+
+  - name: Resize root filesystem "/"
+    command: >
+              xfs_growfs /
+...

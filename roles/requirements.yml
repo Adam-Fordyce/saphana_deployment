@@ -1,0 +1,8 @@
+- name: redhat_sap.sap_rhsm
+- name: redhat_sap.sap_hana_mediacheck
+- name: linux-system-roles.timesync
+- name: linux-system-roles.storage
+- name: redhat_sap.sap_hana_deployment
+- name: redhat_sap.sap_hostagent
+- name: redhat_sap.sap_hana_hsr
+- name: redhat_sap.sap_hana_ha_pacemaker
