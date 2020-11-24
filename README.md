@@ -1,5 +1,5 @@
-# sap-hana-deployment
-Deploy SAP HANA on Azure using Red Hat System Roles for SAP and Ansible roles and modules
+# sap-hana-hsr-with-ha-on-azure-example
+Deploy SAP HANA System Replication with HA on Azure using Red Hat System Roles for SAP and Ansible roles and modules
 
 ## First, let’s take a look at the playbooks to deploy SAP HANA System Replication. 
 Yaml file site.yml is the main playbook, which consists of 4 playbooks respectively to set up Azure credentials (setup_azure_credentials.yml), and provision Azure VMs as SAP HANA nodes (provision_azure_vms.yml) with the credentials, and then set up the Azure VMs (configure_azure_vms.yml) before SAP HANA deployment, finally deploy SAP HANA System Replication (deploy_sap_hana_hsr.yml). 
