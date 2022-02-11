@@ -1,26 +1,13 @@
 ---
 - hosts: localhost
   connection: local
-
-  vars:
-    resource_group: ResourceGroupHana
-    storage_account: storageaccounthana
-    storage_container: images
-    vm_image: bootstrapImage
-    image_name: bootstrap.vhd
-    virtual_network: ResourceGroupHanaVnet
-    virtual_subnet: ResourceGroupHanaSubnet
-    virtual_machine: bootstrap
-    public_ip: bootstrapPublicIP
-    nic: bootstrapVMNic
-    security_group: bootstrapSecgroup
-    image_URI: "https://{{ storage_account }}.blob.core.windows.net/{{ storage_container }}/{{ image_name }}"
-
+  vars_files:
+    - deploy_bootstrap_vars.yml
   tasks:
     - name: Create a resource group
       azure_rm_resourcegroup:
         name: "{{ resource_group }}"
-        location: eastus
+        location: "{{ location }}"
 
     - name: Create an Azure Image from the image uploaded
       azure_rm_image:
@@ -33,13 +20,13 @@
       azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}"
         name: "{{ virtual_network }}"
-        address_prefixes: "10.0.0.0/16"
+        address_prefixes: "{{ supernet_cidr }}"
 
     - name: Create a subnet
       azure_rm_subnet:
         resource_group: "{{ resource_group }}"
         name: "{{ virtual_subnet }}"
-        address_prefix: "10.0.1.0/24"
+        address_prefix: "{{ subnet_cidr }}"
         virtual_network: "{{ virtual_network }}"
 
     - name: Create a public ip
@@ -77,11 +64,11 @@
         resource_group: "{{ resource_group }}"
         name: "{{ virtual_machine }}"
         vm_size: Standard_DS1_v2
-        admin_username: adminUser
-        admin_password: "adminUser#1"
+        admin_username: "{{ admin_user }}"
+        admin_password: "{{ admin_pass }}"
         ssh_public_keys:
-          - path: /home/adminUser/.ssh/authorized_keys
-            key_data: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCv0OWe1F+vgMj2PY8KrRn9TGatHqUFFyZII5vIFrckkWa9VfNuTyM37WiigmD9rUwxX79erwMz5x+HH/oyJ7Yn+8e8Xm9opvA0Y2I2rtqkwXqrI9Nd9ntE1M5mg/Cm9+puly5dOOccyv5EW+j+b+2T1dI0vuFh26h8Ds2oqujO0RDMk8F2xNA3WCuqDGi0ULYhvX0LevWDB7EebrGJZIM1RYD44NBEGmAo8o2YMKLTEouxx9HXMyK14K5pD5ztRj81psbxZ8xYn1s4tjKtjQEoHpJnrN7bhhoEO5UGdHWaNtMESPaSqvyMSTtlW3owh75oSOvk4XH7Xj1jqEOASekTgwo3ILk3c6jvpBFaGBhZlLBtDtR3N/AY6SsQXTnhUVNJCQWlbCpBtPpnqN5Bwgo0pC6EIZtVqpEesXToLf5QG6WskGycmr8IasCi2O/RRlI49H30No1OTIiABkG2Urha9Ff3N1psaNvPUBqvyLIYaApGa8t9j6OYxo6DFK9ys58= root@dell-r640-12.tamlab.pnq2.redhat.com
+          - path: /home/{{ admin_user }}/.ssh/authorized_keys
+            key_data: "{{ ssh_pubkey_data }}"
         network_interfaces: "{{ nic }}"
         image:
           name: "{{ vm_image }}"
@@ -94,5 +81,5 @@
       register: result
 
     - name: Show the information of the VM
-      debug: 
+      debug:
         var=result

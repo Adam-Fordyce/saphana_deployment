@@ -1,18 +1,8 @@
 ---
 - hosts: localhost
   connection: local
-  vars:
-    resource_group: ResourceGroupHana
-    virtual_network: ResourceGroupHanaVnet
-    virtual_subnet: ResourceGroupHanaSubnet
-    virtual_machine1: saphana01
-    virtual_machine2: saphana02
-    nic1: NicHana01
-    nic2: NicHana02
-    security_group: SecurityGroupHana
-    location: eastus
-    avaiability_set: AvailabilitySetHana
-
+  vars_files:
+    - provision_azure_vms_vars.yml
   tasks:
     - name: Ensure a security group that allows SSH
       azure_rm_securitygroup:
@@ -35,7 +25,7 @@
         platform_fault_domain_count: 3
         sku: Aligned
 
-    - name: Ensure a network interface for VM saphana01 
+    - name: Ensure a network interface for VM saphana01
       azure_rm_networkinterface:
         resource_group: "{{ resource_group }}"
         name: "{{ nic1 }}"
@@ -50,19 +40,15 @@
       azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}"
         name: "{{ virtual_machine1 }}"
-        vm_size: Standard_E8s_v3
-        admin_username: adminUser
-        admin_password: "adminUser#1"
+        vm_size: "{{ flavor }}"
+        admin_username: "{{ admin_user }}"
+        admin_password: "{{ admin_pass }}"
         availability_set: "{{ avaiability_set }}"
         ssh_public_keys:
-          - path: /home/adminUser/.ssh/authorized_keys
-            key_data: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDde6pLgEW50q79TBkghZYQJoDvXirzMLfXjFHqr6RYGWMcRx6flsk2b82t+ksJcd/r22R13kyTtLCXwQUh8CjORRdhccWcl4FWOdeB8mQ2DE39HcTRj6UzqeQE9VSAP1if3RBHq5YVvoK/PaamxVZ9um6b86syAPgeuwg/3rAsSq7Ld10+ulTzm2FTTFQYLp4TBnss5gKbgYqar7yKdbwyTpkeLkCmzPjHCiAieYlKBwNyjPxmmMXA8MTk+lFT6X3OtluDKMtZerNfDgy/60e6FVOfyoBUyudZKjmg/tL4PZOu1Ov73BMn6rCIawrafdsRTlbZqIF0w50cK2RZM7RseN6FADc57GT7ZOm87i0aMBIqe/z1PoRvuIOlakzShwtQnwOxWzJeaY4OX1L5R2yoclCFApXHaEwP26qWI0knNwWz+lRjsw1vj0dAOGJKaL2ZbqOWVGG+lnHMMYruAjVg9E9Y0ncvxPMnLgMtwfzvVR9mQznp0zSFRmlfoGTzg+U= root@bootstrap
+          - path: "/home/{{ admin_user }}/.ssh/authorized_keys"
+            key_data: "{{ ssh_pubkey_data }}"
         network_interfaces: "{{ nic1 }}"
-        image:
-          offer: "RHEL"
-          publisher: "RedHat"
-          sku: "8.1"
-          version: "8.1.2020082711"
+        image: "{{ custom_image }}"
         managed_disk_type: Standard_LRS
         data_disks:
             - lun: 0
@@ -84,19 +70,15 @@
       azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}"
         name: "{{ virtual_machine2 }}"
-        vm_size: Standard_E8s_v3
-        admin_username: adminUser
-        admin_password: "adminUser#1"
+        vm_size: "{{ flavor }}"
+        admin_username: "{{ admin_user }}"
+        admin_password: "{{ admin_pass }}"
         availability_set: "{{ avaiability_set }}"
         ssh_public_keys:
-          - path: /home/adminUser/.ssh/authorized_keys
-            key_data: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDde6pLgEW50q79TBkghZYQJoDvXirzMLfXjFHqr6RYGWMcRx6flsk2b82t+ksJcd/r22R13kyTtLCXwQUh8CjORRdhccWcl4FWOdeB8mQ2DE39HcTRj6UzqeQE9VSAP1if3RBHq5YVvoK/PaamxVZ9um6b86syAPgeuwg/3rAsSq7Ld10+ulTzm2FTTFQYLp4TBnss5gKbgYqar7yKdbwyTpkeLkCmzPjHCiAieYlKBwNyjPxmmMXA8MTk+lFT6X3OtluDKMtZerNfDgy/60e6FVOfyoBUyudZKjmg/tL4PZOu1Ov73BMn6rCIawrafdsRTlbZqIF0w50cK2RZM7RseN6FADc57GT7ZOm87i0aMBIqe/z1PoRvuIOlakzShwtQnwOxWzJeaY4OX1L5R2yoclCFApXHaEwP26qWI0knNwWz+lRjsw1vj0dAOGJKaL2ZbqOWVGG+lnHMMYruAjVg9E9Y0ncvxPMnLgMtwfzvVR9mQznp0zSFRmlfoGTzg+U= root@bootstrap
+          - path: "/home/{{ admin_user }}/.ssh/authorized_keys"
+            key_data: "{{ ssh_pubkey_data }}"
         network_interfaces: "{{ nic2 }}"
-        image:
-          offer: "RHEL"
-          publisher: "RedHat"
-          sku: "8.1"
-          version: "8.1.2020082711"
+        image: "{{ custom_image }}"
         managed_disk_type: Standard_LRS
         data_disks:
             - lun: 0
